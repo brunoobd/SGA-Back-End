@@ -458,13 +458,13 @@ public class ProfessorRestController {
 	@RequestMapping(value = "/alterarStatus/{id}", method = RequestMethod.PUT)
     public ResponseEntity<Object> alterarStatusProf(@PathVariable("id") Long id, Professor prof,
             HttpServletRequest request) {       
-        prof = professorRepository.findById(id).get();
-        if (prof.getAtivo()) {
-            prof.setAtivo(false);
+        Professor professor = professorRepository.findById(id).get();
+        if (professor.getAtivo() == true) {
+        	professor.setAtivo(false);
         } else {
-            prof.setAtivo(true);
+        	professor.setAtivo(true);
         }
-        professorRepository.save(prof);
+        professorRepository.save(professor);
         Sucesso sucesso = new Sucesso(HttpStatus.OK, "Sucesso");
         return new ResponseEntity<Object>(sucesso, HttpStatus.OK);
     }

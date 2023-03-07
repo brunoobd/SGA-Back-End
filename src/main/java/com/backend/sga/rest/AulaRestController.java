@@ -93,10 +93,12 @@ public class AulaRestController {
 				valorRandom = random.nextInt(10000);
 			} while (!aulaRepository.findByPartitionKey(valorRandom).isEmpty());
 			// FAZENDO A REPETIÇÃO DE HORAS ATÉ CHEGAR A 0
+
 			while (cargaHorariaUC > 0) {
 				// !NECESSARIO (TimeZone.getTimeZone("GMT-00:00"))
 				Calendar data = Calendar.getInstance(TimeZone.getTimeZone("GMT-00:00"));
 				data.setTime(dataInicio.getTime());
+
 				String dataStr;
 				int mes;
 				mes = data.get(Calendar.MONTH) + 1;
@@ -111,7 +113,7 @@ public class AulaRestController {
 					dataStr = data.get(Calendar.YEAR) + "-" + mes + "-" + data.get(Calendar.DAY_OF_MONTH);
 				}
 				if (feriadosNacionaisRepository.findByDate(dataStr).isEmpty()
-						|| diaNaoLetivoRepository.findByData(data).isEmpty()) {
+						&& diaNaoLetivoRepository.findByData(data).isEmpty()) {
 					int diaSemana = data.get(Calendar.DAY_OF_WEEK);
 					if (diasDaSemana[diaSemana - 1] == true) {
 						// CRIANDO A AULA
@@ -148,9 +150,9 @@ public class AulaRestController {
 						// SUBTRAINDO A CARGA HORARIA DEPOIS QUE O CADASTRO ACONTECE
 						cargaHorariaUC = cargaHorariaUC - aula.getCargaDiaria();
 					}
-					// PULANDO DE 1 EM 1 DIA...
-					dataInicio.add(Calendar.DAY_OF_MONTH, 1);
 				}
+				// PULANDO DE 1 EM 1 DIA...
+				dataInicio.add(Calendar.DAY_OF_MONTH, 1);
 			}
 		}
 		List<Professor> professores = (List<Professor>) professorRepository.findAllAtivo();
@@ -190,7 +192,7 @@ public class AulaRestController {
 	public Iterable<Aula> listarAulas() {
 		return aulaRepository.findAll();
 	}
-	
+
 	@User
 	@Administrador
 	@RequestMapping(value = "/key/{partitionKey}", method = RequestMethod.GET)
@@ -200,13 +202,14 @@ public class AulaRestController {
 			Object result[] = new Object[2];
 			result[0] = keyData.get(0).getData();
 			result[1] = keyData.get(keyData.size() - 1).getData();
-			
+
 			return new ResponseEntity<Object>(result, HttpStatus.OK);
 		} else {
-			Erro erro = new Erro(HttpStatus.INTERNAL_SERVER_ERROR, "Nenhuma aula com essa partitionKey encontrada...", null);
+			Erro erro = new Erro(HttpStatus.INTERNAL_SERVER_ERROR, "Nenhuma aula com essa partitionKey encontrada...",
+					null);
 			return new ResponseEntity<Object>(erro, HttpStatus.INTERNAL_SERVER_ERROR);
 		}
-		
+
 	}
 
 	// DELETAR AULAS
@@ -445,7 +448,7 @@ public class AulaRestController {
 			@RequestParam("periodo") Periodo periodo, @RequestParam("id") Long id) {
 		ArrayList<Professor> professoresOcupados = new ArrayList<Professor>();
 		ArrayList<Ambiente> ambientesOcupados = new ArrayList<Ambiente>();
-		
+
 		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy"); // FORMATANDO DATA
 		Calendar calendar = Calendar.getInstance(); // GUARDANDO AS VARIAVEL
 		try {
@@ -459,30 +462,29 @@ public class AulaRestController {
 			return new ResponseEntity<Object>(erro, HttpStatus.INTERNAL_SERVER_ERROR);
 		} else {
 			if (periodo != Periodo.INTEGRAL) {
-                if (!professorRepository.buscaOcupado(calendar, periodo).isEmpty()) {
-                    professoresOcupados
-                            .addAll(professorRepository.buscaOcupado(calendar, periodo));
-                }
-                if (!ambienteRepository.retornaOcupadosPorDia(calendar, periodo).isEmpty()) {
-                    ambientesOcupados.addAll(
-                            ambienteRepository.retornaOcupadosPorDia(calendar, periodo));
-                }
-                if(periodo != Periodo.NOITE) {
-                    ambientesOcupados.addAll(ambienteRepository.retornaOcupadosPorDia(calendar, Periodo.INTEGRAL));
-                    professoresOcupados.addAll(professorRepository.buscaOcupado(calendar, Periodo.INTEGRAL));   
-                }
-            } else {
-                //Validação para não permitir que crie nenhuma aula se a aula do front for integral
-            	professoresOcupados.addAll(professorRepository.buscaOcupadoData(calendar));
+				if (!professorRepository.buscaOcupado(calendar, periodo).isEmpty()) {
+					professoresOcupados.addAll(professorRepository.buscaOcupado(calendar, periodo));
+				}
+				if (!ambienteRepository.retornaOcupadosPorDia(calendar, periodo).isEmpty()) {
+					ambientesOcupados.addAll(ambienteRepository.retornaOcupadosPorDia(calendar, periodo));
+				}
+				if (periodo != Periodo.NOITE) {
+					ambientesOcupados.addAll(ambienteRepository.retornaOcupadosPorDia(calendar, Periodo.INTEGRAL));
+					professoresOcupados.addAll(professorRepository.buscaOcupado(calendar, Periodo.INTEGRAL));
+				}
+			} else {
+				// Validação para não permitir que crie nenhuma aula se a aula do front for
+				// integral
+				professoresOcupados.addAll(professorRepository.buscaOcupadoData(calendar));
 				ambientesOcupados.addAll(ambienteRepository.ocupadosPorData(calendar));
-            }
-			
+			}
+
 			List<Professor> professores = (List<Professor>) professorRepository.findAllAtivo();
 			List<Ambiente> ambientes = (List<Ambiente>) ambienteRepository.findAllAtivo();
-			
+
 			professores.removeAll(professoresOcupados);
 			ambientes.removeAll(ambientesOcupados);
-			
+
 			Object result[] = new Object[2];
 			result[0] = professores;
 			result[1] = ambientes;
@@ -500,7 +502,7 @@ public class AulaRestController {
 			@RequestParam("dataFinal") String dataFinal, @RequestParam("periodo") Periodo periodo) {
 		ArrayList<Professor> professoresOcupados = new ArrayList<Professor>();
 		ArrayList<Ambiente> ambientesOcupados = new ArrayList<Ambiente>();
-		
+
 		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy"); // FORMATANDO DATA
 		Calendar calendarInicio = Calendar.getInstance(); // GUARDANDO AS VARIAVEL
 		try {
@@ -515,30 +517,34 @@ public class AulaRestController {
 			e.printStackTrace();
 		}
 		if (periodo != Periodo.INTEGRAL) {
-            if (!professorRepository.buscaOcupadoIntervalo(calendarInicio, calendarFinal, periodo).isEmpty()) {
-                professoresOcupados
-                        .addAll(professorRepository.buscaOcupadoIntervalo(calendarInicio, calendarFinal, periodo));
-            }
-            if (!ambienteRepository.retornaOcupadoEmIntervaloDeDatas(calendarInicio, calendarFinal, periodo).isEmpty()) {
-                ambientesOcupados.addAll(
-                		ambienteRepository.retornaOcupadoEmIntervaloDeDatas(calendarInicio, calendarFinal, periodo));
-            }
-            if(periodo != Periodo.NOITE) {
-            	professoresOcupados.addAll(professorRepository.buscaOcupadoIntervalo(calendarInicio, calendarFinal, Periodo.INTEGRAL));   
-                ambientesOcupados.addAll(ambienteRepository.retornaOcupadoEmIntervaloDeDatas(calendarInicio, calendarFinal, Periodo.INTEGRAL));
-            }
-        } else {
-            //Validação para não permitir que crie nenhuma aula se a aula do front for integral
-        	professoresOcupados.addAll(professorRepository.buscaOcupadoDatas(calendarInicio, calendarFinal));
+			if (!professorRepository.buscaOcupadoIntervalo(calendarInicio, calendarFinal, periodo).isEmpty()) {
+				professoresOcupados
+						.addAll(professorRepository.buscaOcupadoIntervalo(calendarInicio, calendarFinal, periodo));
+			}
+			if (!ambienteRepository.retornaOcupadoEmIntervaloDeDatas(calendarInicio, calendarFinal, periodo)
+					.isEmpty()) {
+				ambientesOcupados.addAll(
+						ambienteRepository.retornaOcupadoEmIntervaloDeDatas(calendarInicio, calendarFinal, periodo));
+			}
+			if (periodo != Periodo.NOITE) {
+				professoresOcupados.addAll(
+						professorRepository.buscaOcupadoIntervalo(calendarInicio, calendarFinal, Periodo.INTEGRAL));
+				ambientesOcupados.addAll(ambienteRepository.retornaOcupadoEmIntervaloDeDatas(calendarInicio,
+						calendarFinal, Periodo.INTEGRAL));
+			}
+		} else {
+			// Validação para não permitir que crie nenhuma aula se a aula do front for
+			// integral
+			professoresOcupados.addAll(professorRepository.buscaOcupadoDatas(calendarInicio, calendarFinal));
 			ambientesOcupados.addAll(ambienteRepository.ocupadosPorDatas(calendarInicio, calendarFinal));
-        }
+		}
 
 		List<Professor> professores = (List<Professor>) professorRepository.findAllAtivo();
 		List<Ambiente> ambientes = (List<Ambiente>) ambienteRepository.findAllAtivo();
-		
+
 		professores.removeAll(professoresOcupados);
 		ambientes.removeAll(ambientesOcupados);
-		
+
 		Object result[] = new Object[2];
 		result[0] = professores;
 		result[1] = ambientes;

@@ -55,7 +55,7 @@ public class CursoRestController {
 			Sucesso sucesso = new Sucesso(HttpStatus.OK, "Sucesso");
 			Object[] filtro = new Object[2];
 			filtro[0] = sucesso;
-			filtro[1] = curso.getId();
+			filtro[1] = curso;
 			ResponseEntity<Object> okpost = new ResponseEntity<Object>(filtro, HttpStatus.OK);
 			return okpost;
 		} else {
@@ -117,7 +117,7 @@ public class CursoRestController {
 				}
 				cursoRepository.save(curso);
 				Sucesso sucesso = new Sucesso(HttpStatus.OK, "Sucesso");
-				return new ResponseEntity<Object>(sucesso, HttpStatus.OK);
+				return new ResponseEntity<Object>(curso, HttpStatus.OK);
 			}
 		}
 	}
@@ -142,31 +142,28 @@ public class CursoRestController {
 	public Iterable<Curso> buscaPalavrasChaves(@PathVariable("nome") String nome) {
 		return cursoRepository.palavraChave(nome);
 	}
-	
+
 	@Administrador
 	@User
 	@RequestMapping(value = "/buscaCr/{nome}", method = RequestMethod.GET)
 	public Iterable<Curso> buscaCurso(@PathVariable("nome") String nome) {
 		return cursoRepository.buscaCurso(nome);
 	}
-	
+
 	@Administrador
 	@User
 	@RequestMapping(value = "/alterarStatus/{id}", method = RequestMethod.PUT)
-    public ResponseEntity<Object> alterarStatusCurso(@PathVariable("id") Long id, HttpServletRequest request) {
-        Optional<Curso> status = cursoRepository.findById(id);
-        if (status.get().getId() == id) {
-            if (status.get().isAtivo()) {
-                status.get().setAtivo(false);
-            } else {
-                status.get().setAtivo(true);
-            }
-            cursoRepository.save(status.get());
-            Sucesso sucesso = new Sucesso(HttpStatus.OK, "Sucesso");
-            return new ResponseEntity<Object>(sucesso, HttpStatus.OK);
-        } else {
-            Erro erro = new Erro(HttpStatus.INTERNAL_SERVER_ERROR, "Não foi possivel alterar o status do curso", null);
-            return new ResponseEntity<Object>(erro, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
+	public ResponseEntity<Object> alterarStatusCurso(@PathVariable("id") Long id, HttpServletRequest request) {
+		Curso curso = cursoRepository.findById(id).get();
+		System.out.println(curso.isAtivo());
+		if (curso.isAtivo() == true) {
+			curso.setAtivo(false);
+		} else {
+			curso.setAtivo(true);
+		}
+		cursoRepository.save(curso);
+		Sucesso sucesso = new Sucesso(HttpStatus.OK, "Sucesso");
+		return new ResponseEntity<Object>(sucesso, HttpStatus.OK);
+
+	}
 }
