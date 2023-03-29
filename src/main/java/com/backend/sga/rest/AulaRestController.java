@@ -235,9 +235,13 @@ public class AulaRestController {
 	@User
 	@Administrador
 	@RequestMapping(value = "/{id}", method = RequestMethod.PUT, consumes = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<Object> atualizarAula(@PathVariable("id") Long id, @RequestBody Aula aula,
+	public ResponseEntity<Object> atualizarAula(@PathVariable("id") long id, @RequestBody Aula aula,
 			HttpServletRequest request) {
+		System.out.println(">>>>>>"+(aula.getId() == id));
+		System.out.println(">>>>>>"+(aula.getId().equals(id)));
 		if (aula.getId() != id) {
+			System.out.println("Aula.getId() - " + aula.getId());
+			System.out.println("Id do pathvariable: " + id);
 			Erro erro = new Erro(HttpStatus.INTERNAL_SERVER_ERROR, "ID inválido", null);
 			return new ResponseEntity<Object>(erro, HttpStatus.INTERNAL_SERVER_ERROR);
 		} else {

@@ -15,7 +15,7 @@ import com.backend.sga.model.TipoAmbiente;
 @Repository
 public interface AmbienteRepository extends PagingAndSortingRepository<Ambiente, Long> {
 
-	@Query("SELECT a FROM Ambiente a WHERE a.ativo = 1")
+	@Query("SELECT a FROM Ambiente a WHERE a.ativo = 1 ORDER BY a.nome ASC")
 	public List<Ambiente> findAllAtivo();
 	
 	//SELECT * FROM sga.ambiente order by sga.ambiente.nome;

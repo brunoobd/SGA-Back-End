@@ -10,7 +10,7 @@ import com.backend.sga.model.Periodo;
 import com.backend.sga.model.Professor;
 @Repository
 public interface ProfessorRepository extends PagingAndSortingRepository<Professor, Long>{
-    @Query("SELECT p FROM Professor p WHERE p.ativo = 1")
+    @Query("SELECT p FROM Professor p WHERE p.ativo = 1 ORDER BY p.nome ASC")
     public List<Professor> findAllAtivo();
     
     //@Query("SELECT p FROM Professor p GROUP BY p.nome")
